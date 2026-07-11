@@ -34,3 +34,6 @@ dist/
 # Python
 __pycache__/
 *.pyc
+
+# Runtime data
+data/ai_companion.db
