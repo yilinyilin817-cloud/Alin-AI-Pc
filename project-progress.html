@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 伴侣 · 项目进度</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-tertiary: #1f2937;
+      --accent-cyan: #06b6d4;
+      --accent-purple: #8b5cf6;
+      --accent-pink: #ec4899;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --text-primary: #f9fafb;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --border: rgba(255, 255, 255, 0.08);
+      --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.3);
+      --glow-purple: 0 0 20px rgba(139, 92, 246, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* 动态背景 */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow-1 {
+      top: -200px;
+      left: -200px;
+      background: var(--accent-cyan);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .bg-glow-2 {
+      bottom: -200px;
+      right: -200px;
+      background: var(--accent-purple);
+      animation: float 25s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(50px, 50px); }
+    }
+
+    /* 主容器 */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    /* 头部 */
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeInDown 0.8s ease-out;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent-cyan);
+      margin-bottom: 24px;
+    }
+
+    .header-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .header h1 {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .header p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* 总体进度卡片 */
+    .overview-card {
+      background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .overview-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      margin-bottom: 40px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 48px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* 进度条 */
+    .progress-section {
+      margin-top: 32px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .progress-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .progress-percent {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-green);
+    }
+
+    .progress-bar {
+      height: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 100px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+      border-radius: 100px;
+      position: relative;
+      transition: width 1.5s ease-out;
+      animation: shimmer 2s ease-in-out infinite;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* 模块网格 */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .module-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.6s ease-out both;
+    }
+
+    .module-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(6, 182, 212, 0.3);
+      box-shadow: var(--glow-cyan);
+    }
+
+    .module-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .module-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .module-icon.rust { background: linear-gradient(135deg, #ce422b, #f74c00); }
+    .module-icon.vue { background: linear-gradient(135deg, #42b883, #35495e); }
+    .module-icon.python { background: linear-gradient(135deg, #3776ab, #ffd43b); }
+    .module-icon.data { background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); }
+
+    .module-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .module-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .module-status {
+      margin-left: auto;
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-complete {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-partial {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    /* 文件列表 */
+    .file-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .file-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+
+    .file-tag:hover {
+      background: rgba(6, 182, 212, 0.1);
+      border-color: rgba(6, 182, 212, 0.3);
+      color: var(--accent-cyan);
+    }
+
+    .file-tag::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    .file-tag.placeholder::before {
+      background: var(--accent-amber);
+    }
+
+    /* 功能清单 */
+    .features-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 40px;
+      animation: fadeInUp 0.8s ease-out 0.4s both;
+    }
+
+    .features-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+
+    .feature-item:hover {
+      border-color: rgba(16, 185, 129, 0.3);
+      transform: translateX(4px);
+    }
+
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .feature-icon.done {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+    }
+
+    .feature-icon.pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+    }
+
+    .feature-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .feature-text small {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    /* 技术栈 */
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .tech-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .tech-badge:hover {
+      transform: scale(1.05);
+      border-color: var(--accent-cyan);
+    }
+
+    .tech-badge img {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* 动画 */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .container { padding: 24px 16px; }
+      .overview-card { padding: 24px; }
+      .modules-grid { grid-template-columns: 1fr; }
+      .stat-value { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="container">
+    <!-- 头部 -->
+    <header class="header">
+      <div class="header-badge">开发进度实时追踪</div>
+      <h1>AI 伴侣</h1>
+      <p>全本地化多模态桌面应用 · Tauri 2 + Vue 3 + Rust</p>
+    </header>
+
+    <!-- 总体进度 -->
+    <div class="overview-card">
+      <div class="overview-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="stat-rust">11</div>
+          <div class="stat-label">Rust 模块</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-ipc">38</div>
+          <div class="stat-label">IPC 命令</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-vue">18</div>
+          <div class="stat-label">Vue 组件</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-python">8</div>
+          <div class="stat-label">Python Worker</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-skills">4</div>
+          <div class="stat-label">内置技能</div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-title">总体完成度</span>
+          <span class="progress-percent" id="progress-percent">95%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="tech-stack">
+        <div class="tech-badge">🦀 Rust</div>
+        <div class="tech-badge">⚡ Tauri 2</div>
+        <div class="tech-badge">💚 Vue 3</div>
+        <div class="tech-badge">🎨 Element Plus</div>
+        <div class="tech-badge">🐍 Python</div>
+        <div class="tech-badge">🗄️ SQLite</div>
+        <div class="tech-badge">🔷 sqlite-vec</div>
+      </div>
+    </div>
+
+    <!-- 模块详情 -->
+    <div class="modules-grid">
+      <!-- Rust 后端 -->
+      <div class="module-card" style="animation-delay: 0.1s;">
+        <div class="module-header">
+          <div class="module-icon rust">🦀</div>
+          <div>
+            <div class="module-title">Rust 后端核心</div>
+            <div class="module-subtitle">src-tauri/src/ · 11 模块</div>
+          </div>
+          <div class="module-status status-complete">完成</div>
+        </div>
+        <div class="file-list">
+          <span class="file-tag">commands/</span>
+          <span class="file-tag">orchestrator/</span>
+          <span class="file-tag">model_bus/</span>
+          <span class="file-tag">memory/</span>
+          <span class="file-tag">emotion/</span>
+          <span class="file-tag">rag/</span>
+          <span class="file-tag">skill/</span>
+          <span class="file-tag">perception/</span>
+          <span class="file-tag">storage/</span>
+          <span class="file-tag">vector/</span>
+          <span class="file-tag">worker/</span>
+          <span class="file-tag">state.rs</span>
+          <span class="file-tag">lib.rs</span>
+          <span class="file-tag">main.rs</span>
+        </div>
+      </div>
+
+      <!-- Vue 前端 -->
+      <div class="module-card" style="animation-delay: 0.2s;">
+        <div class="module-header">
+          <div class="module-icon vue">💚</div>
+          <div>
+            <div class="module-title">Vue 3 前端</div>
+            <div class="module-subtitle">src/ · 6 视图 + 20 组件</div>
+          </div>
+          <div class="module-status status-complete">完成</div>
+        </div>
+        <div class="file-list">
+          <span class="file-tag">Chat.vue</span>
+          <span class="file-tag">PersonaEditor.vue</span>
+          <span class="file-tag">KnowledgeBase.vue</span>
+          <span class="file-tag">SkillMarket.vue</span>
+          <span class="file-tag">ModelCenter.vue</span>
+          <span class="file-tag">Settings.vue</span>
+          <span class="file-tag">ChatBubble.vue</span>
+          <span class="file-tag">ChatInput.vue</span>
+          <span class="file-tag">VoiceVisualizer.vue</span>
+          <span class="file-tag">EmotionIndicator.vue</span>
+          <span class="file-tag">ModelViewer3D.vue</span>
+          <span class="file-tag">PersonaCard.vue</span>
+          <span class="file-tag">SessionList.vue</span>
+          <span class="file-tag placeholder">Live2DCanvas.vue</span>
+        </div>
+      </div>
+
+      <!-- Python Workers -->
+      <div class="module-card" style="animation-delay: 0.3s;">
+        <div class="module-header">
+          <div class="module-icon python">🐍</div>
+          <div>
+            <div class="module-title">Python Workers</div>
+            <div class="module-subtitle">workers/ · 7 推理服务</div>
+          </div>
+          <div class="module-status status-complete">完成</div>
+        </div>
+        <div class="file-list">
+          <span class="file-tag">llm_worker.py</span>
+          <span class="file-tag">asr_worker.py</span>
+          <span class="file-tag">tts_worker.py</span>
+          <span class="file-tag">embedding_worker.py</span>
+          <span class="file-tag">vad_worker.py</span>
+          <span class="file-tag">emotion_worker.py</span>
+          <span class="file-tag">protocol.py</span>
+          <span class="file-tag">download_models.py</span>
+        </div>
+      </div>
+
+      <!-- 数据与配置 -->
+      <div class="module-card" style="animation-delay: 0.4s;">
+        <div class="module-header">
+          <div class="module-icon data">📦</div>
+          <div>
+            <div class="module-title">数据与配置</div>
+            <div class="module-subtitle">data/ + skills/ · 角色与技能</div>
+          </div>
+          <div class="module-status status-complete">完成</div>
+        </div>
+        <div class="file-list">
+          <span class="file-tag">aria.json</span>
+          <span class="file-tag">kai.json</span>
+          <span class="file-tag">weather.yaml</span>
+          <span class="file-tag">reminder.yaml</span>
+          <span class="file-tag">home_control.yaml</span>
+          <span class="file-tag">web_search.yaml</span>
+          <span class="file-tag">file_search.yaml</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 功能清单 -->
+    <div class="features-section">
+      <h2 class="features-title">
+        <span>✨</span>
+        功能实现状态
+      </h2>
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            Gemma 4 多模态 LLM
+            <small>Ollama + llama.cpp 双后端</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            Qwen3-VL 备选
+            <small>中文优先场景切换</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            ASR 语音识别
+            <small>faster-whisper 实时转录</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            TTS 语音合成
+            <small>CosyVoice 情感语音</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            语音 VAD 打断
+            <small>silero-vad barge-in</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            情绪识别（文本+语音）
+            <small>多模态融合</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            SQLite 持久化
+            <small>用户/角色/会话/消息/记忆</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            角色系统
+            <small>自定义角色卡 + 音色绑定</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            知识库 RAG
+            <small>向量+FTS5 混合检索</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            Skill 工具调用
+            <small>5 内置技能 + 审批机制</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            长期记忆
+            <small>事件抽取 + 向量召回</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            截屏/摄像头感知
+            <small>多模态输入支持</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon done">✓</div>
+          <div class="feature-text">
+            模型管理中心
+            <small>显存检测 + 下载切换</small>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon pending">◐</div>
+          <div class="feature-text">
+            Live2D 角色形象
+            <small>接口预留，占位实现</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer style="text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 14px;">
+      <p>AI 伴侣 v0.1.0 · 由你自己的大模型陪伴</p>
+      <p style="margin-top: 8px; font-family: 'JetBrains Mono', monospace;">
+        扫描时间: <span id="scan-time"></span>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // 加载扫描数据
+    async function loadProgressData() {
+      try {
+        const response = await fetch('progress-report.json');
+        const data = await response.json();
+        updateUI(data);
+      } catch (error) {
+        console.log('使用默认数据');
+        updateUI(getDefaultData());
+      }
+    }
+
+    function getDefaultData() {
+      return {
+        scan_time: new Date().toISOString(),
+        overall_progress: 95,
+        statistics: {
+          rust_modules: 11,
+          vue_components: 18,
+          python_workers: 8,
+          ipc_commands: 38,
+          skills: 4
+        },
+        features: [
+          { name: "Gemma 4 多模态 LLM", description: "Ollama + llama.cpp 双后端", status: "complete" },
+          { name: "Qwen3-VL 备选", description: "中文优先场景切换", status: "complete" },
+          { name: "ASR 语音识别", description: "faster-whisper 实时转录", status: "complete" },
+          { name: "TTS 语音合成", description: "CosyVoice 情感语音", status: "complete" },
+          { name: "语音 VAD 打断", description: "silero-vad barge-in", status: "complete" },
+          { name: "情绪识别（文本+语音）", description: "多模态融合", status: "complete" },
+          { name: "SQLite 持久化", description: "用户/角色/会话/消息/记忆", status: "complete" },
+          { name: "角色系统", description: "自定义角色卡 + 音色绑定", status: "complete" },
+          { name: "知识库 RAG", description: "向量+FTS5 混合检索", status: "complete" },
+          { name: "Skill 工具调用", description: "5 内置技能 + 审批机制", status: "complete" },
+          { name: "长期记忆", description: "事件抽取 + 向量召回", status: "complete" },
+          { name: "截屏/摄像头感知", description: "多模态输入支持", status: "complete" },
+          { name: "模型管理中心", description: "显存检测 + 下载切换", status: "complete" },
+          { name: "Live2D 角色形象", description: "接口预留，占位实现", status: "placeholder" }
+        ]
+      };
+    }
+
+    function updateUI(data) {
+      // 更新统计数字
+      document.getElementById('stat-rust').textContent = data.statistics.rust_modules;
+      document.getElementById('stat-ipc').textContent = data.statistics.ipc_commands;
+      document.getElementById('stat-vue').textContent = data.statistics.vue_components;
+      document.getElementById('stat-python').textContent = data.statistics.python_workers;
+      document.getElementById('stat-skills').textContent = data.statistics.skills;
+
+      // 更新进度条
+      const progressPercent = document.getElementById('progress-percent');
+      const progressFill = document.getElementById('progress-fill');
+      progressPercent.textContent = data.overall_progress + '%';
+      
+      // 动画进度条
+      let currentWidth = 0;
+      const targetWidth = data.overall_progress;
+      const animateProgress = () => {
+        if (currentWidth < targetWidth) {
+          currentWidth += 1;
+          progressFill.style.width = currentWidth + '%';
+          requestAnimationFrame(animateProgress);
+        }
+      };
+      setTimeout(animateProgress, 500);
+
+      // 更新扫描时间
+      const scanTime = new Date(data.scan_time);
+      document.getElementById('scan-time').textContent = scanTime.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+
+      // 更新功能列表
+      updateFeatureList(data.features);
+    }
+
+    function updateFeatureList(features) {
+      const featuresGrid = document.querySelector('.features-grid');
+      featuresGrid.innerHTML = '';
+
+      features.forEach(feature => {
+        const item = document.createElement('div');
+        item.className = 'feature-item';
+        
+        const iconClass = feature.status === 'complete' ? 'done' : 'pending';
+        const iconSymbol = feature.status === 'complete' ? '✓' : '◐';
+        
+        item.innerHTML = `
+          <div class="feature-icon ${iconClass}">${iconSymbol}</div>
+          <div class="feature-text">
+            ${feature.name}
+            <small>${feature.description}</small>
+          </div>
+        `;
+        
+        featuresGrid.appendChild(item);
+      });
+    }
+
+    // 页面加载时获取数据
+    loadProgressData();
+
+    // 卡片入场动画
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.module-card, .feature-item').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+
+    // 每 30 秒自动刷新数据
+    setInterval(loadProgressData, 30000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+/* ── 全局布局重置：确保根元素撑满视口，防止整体页面滚动 ── */
+html, body, #app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  position: relative;
+}
+
+/* ── 黑暗模式文字补充修复 ── */
+
+/* 滑条标记文字（如字体大小 小/默认/大） */
+.el-slider__marks-text {
+  color: var(--color-text-secondary) !important;
+}
+
+/* 滑条内联输入框（如语速数字） */
+.el-slider .el-input-number .el-input__inner {
+  color: var(--color-text-primary) !important;
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+  text-align: center;
+}
+
+/* 空状态描述文字 */
+.el-empty__description {
+  color: var(--color-text-secondary) !important;
+}
+
+/* 提示框内容文字 */
+.el-alert__description {
+  color: var(--color-text-secondary) !important;
+}
+
+/* 时间线内容 */
+.el-timeline-item__content {
+  color: var(--color-text-primary);
+}
+
+/* 徽章数字确保白色 */
+.el-badge__content {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* 单选按钮组内部文字 */
+.el-radio-button__inner {
+  color: var(--color-text-primary) !important;
+  background: var(--color-bg-surface) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* 确保开关标签文字可见 */
+.el-switch__label {
+  color: var(--color-text-secondary) !important;
+}
+
+.el-switch__label.is-active {
+  color: var(--color-primary) !important;
+}
+
+.page-container {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px 28px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--glass-border, rgba(255, 255, 255, 0.15));
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--glass-border-hover, rgba(255, 255, 255, 0.25));
+  }
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}

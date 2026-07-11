@@ -1,0 +1,320 @@
+{
+  "scan_time": "2026-07-05T21:37:39.007483",
+  "project_name": "AI 伴侣",
+  "version": "0.1.0",
+  "modules": {
+    "rust": {
+      "name": "Rust 后端核心",
+      "icon": "🦀",
+      "path": "src-tauri/src/",
+      "modules": [
+        {
+          "name": "commands",
+          "files": [
+            "capture.rs",
+            "chat.rs",
+            "knowledge.rs",
+            "memory.rs",
+            "mod.rs",
+            "model.rs",
+            "persona.rs",
+            "settings.rs",
+            "skill.rs",
+            "system.rs",
+            "voice.rs"
+          ],
+          "file_count": 11,
+          "status": "complete"
+        },
+        {
+          "name": "emotion",
+          "files": [
+            "fusion.rs",
+            "mod.rs",
+            "text_emotion.rs",
+            "voice_emotion.rs"
+          ],
+          "file_count": 4,
+          "status": "complete"
+        },
+        {
+          "name": "lib",
+          "files": [
+            "lib.rs"
+          ],
+          "file_count": 1,
+          "status": "complete"
+        },
+        {
+          "name": "main",
+          "files": [
+            "main.rs"
+          ],
+          "file_count": 1,
+          "status": "complete"
+        },
+        {
+          "name": "memory",
+          "files": [
+            "event_extractor.rs",
+            "long_term.rs",
+            "mod.rs",
+            "short_term.rs",
+            "summarizer.rs"
+          ],
+          "file_count": 5,
+          "status": "complete"
+        },
+        {
+          "name": "model_bus",
+          "files": [
+            "mod.rs",
+            "ollama.rs",
+            "provider.rs",
+            "registry.rs",
+            "scheduler.rs"
+          ],
+          "file_count": 5,
+          "status": "complete"
+        },
+        {
+          "name": "orchestrator",
+          "files": [
+            "mod.rs",
+            "pipeline.rs"
+          ],
+          "file_count": 2,
+          "status": "complete"
+        },
+        {
+          "name": "perception",
+          "files": [
+            "audio_io.rs",
+            "camera.rs",
+            "mod.rs",
+            "screen.rs"
+          ],
+          "file_count": 4,
+          "status": "complete"
+        },
+        {
+          "name": "rag",
+          "files": [
+            "indexer.rs",
+            "mod.rs",
+            "retriever.rs"
+          ],
+          "file_count": 3,
+          "status": "complete"
+        },
+        {
+          "name": "skill",
+          "files": [
+            "builtin.rs",
+            "executor.rs",
+            "mod.rs",
+            "registry.rs",
+            "schema_validator.rs"
+          ],
+          "file_count": 5,
+          "status": "complete"
+        },
+        {
+          "name": "state",
+          "files": [
+            "state.rs"
+          ],
+          "file_count": 1,
+          "status": "complete"
+        },
+        {
+          "name": "storage",
+          "files": [
+            "mod.rs",
+            "models.rs",
+            "repo.rs"
+          ],
+          "file_count": 3,
+          "status": "complete"
+        },
+        {
+          "name": "vector",
+          "files": [
+            "factory.rs",
+            "mod.rs",
+            "qdrant.rs",
+            "sqlite_vec.rs",
+            "store.rs"
+          ],
+          "file_count": 5,
+          "status": "complete"
+        },
+        {
+          "name": "worker",
+          "files": [
+            "ipc.rs",
+            "mod.rs",
+            "pool.rs",
+            "spawn.rs"
+          ],
+          "file_count": 4,
+          "status": "complete"
+        }
+      ],
+      "total_files": 54,
+      "status": "complete"
+    },
+    "vue": {
+      "name": "Vue 3 前端",
+      "icon": "💚",
+      "path": "src/",
+      "views": [
+        "Chat",
+        "KnowledgeBase",
+        "ModelCenter",
+        "PersonaEditor",
+        "Settings",
+        "SkillMarket"
+      ],
+      "components": [
+        "ChatBubble",
+        "ChatInput",
+        "EmotionIndicator",
+        "EmptyState",
+        "ImagePreview",
+        "Live2DCanvas",
+        "ModelDownloadCard",
+        "ModelViewer3D",
+        "PersonaCard",
+        "SessionList",
+        "SkillPermissionDialog",
+        "VoiceVisualizer"
+      ],
+      "total_files": 18,
+      "live2d_status": "placeholder",
+      "status": "complete"
+    },
+    "python": {
+      "name": "Python Workers",
+      "icon": "🐍",
+      "path": "workers/",
+      "workers": [
+        "asr_worker",
+        "download_models",
+        "embedding_worker",
+        "emotion_worker",
+        "llm_worker",
+        "protocol",
+        "tts_worker",
+        "vad_worker"
+      ],
+      "total_files": 8,
+      "status": "complete"
+    },
+    "data": {
+      "name": "数据与配置",
+      "icon": "📦",
+      "path": "data/ + skills/",
+      "personas": [
+        "aria",
+        "kai"
+      ],
+      "skills": [
+        "file_search",
+        "home_control",
+        "reminder",
+        "weather",
+        "web_search"
+      ],
+      "skill_implementations": [
+        "home_control",
+        "reminder",
+        "weather",
+        "web_search"
+      ],
+      "total_files": 11,
+      "status": "complete"
+    }
+  },
+  "features": [
+    {
+      "name": "Gemma 4 多模态 LLM",
+      "description": "Ollama + llama.cpp 双后端",
+      "status": "complete"
+    },
+    {
+      "name": "Qwen3-VL 备选",
+      "description": "中文优先场景切换",
+      "status": "complete"
+    },
+    {
+      "name": "ASR 语音识别",
+      "description": "faster-whisper 实时转录",
+      "status": "complete"
+    },
+    {
+      "name": "TTS 语音合成",
+      "description": "CosyVoice 情感语音",
+      "status": "complete"
+    },
+    {
+      "name": "语音 VAD 打断",
+      "description": "silero-vad barge-in",
+      "status": "complete"
+    },
+    {
+      "name": "情绪识别（文本+语音）",
+      "description": "多模态融合",
+      "status": "complete"
+    },
+    {
+      "name": "SQLite 持久化",
+      "description": "用户/角色/会话/消息/记忆",
+      "status": "complete"
+    },
+    {
+      "name": "角色系统",
+      "description": "自定义角色卡 + 音色绑定",
+      "status": "complete"
+    },
+    {
+      "name": "知识库 RAG",
+      "description": "向量+FTS5 混合检索",
+      "status": "complete"
+    },
+    {
+      "name": "Skill 工具调用",
+      "description": "5 内置技能 + 审批机制",
+      "status": "complete"
+    },
+    {
+      "name": "长期记忆",
+      "description": "事件抽取 + 向量召回",
+      "status": "complete"
+    },
+    {
+      "name": "截屏/摄像头感知",
+      "description": "多模态输入支持",
+      "status": "complete"
+    },
+    {
+      "name": "模型管理中心",
+      "description": "显存检测 + 下载切换",
+      "status": "complete"
+    },
+    {
+      "name": "Live2D 角色形象",
+      "description": "接口预留，占位实现",
+      "status": "placeholder"
+    }
+  ],
+  "statistics": {
+    "rust_modules": 11,
+    "vue_components": 18,
+    "python_workers": 8,
+    "ipc_commands": 38,
+    "skills": 4,
+    "total_files": 5881
+  },
+  "overall_progress": 95
+}

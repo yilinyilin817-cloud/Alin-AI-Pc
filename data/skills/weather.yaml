@@ -1,0 +1,21 @@
+name: get_weather
+description: 查询指定城市的天气信息（当前天气或预报）。当用户问"今天天气"、"明天会下雨吗"、"XX城市多少度"、"周末天气怎么样"等时使用。
+parameters:
+  - name: city
+    type: string
+    required: true
+    description: 城市名（如 北京、Shanghai、Tokyo）
+  - name: date
+    type: string
+    required: false
+    description: 查询日期：today（今天，默认）、tomorrow（明天）、或 ISO 8601 日期（如 2026-07-09）。注意：免费API仅支持1-3天预报，精度有限。
+  - name: days
+    type: integer
+    required: false
+    description: 预报天数（默认1，最大3）
+executor:
+  type: rust
+  module: builtin
+  function: get_weather
+permissions: [network]
+approval_mode: once

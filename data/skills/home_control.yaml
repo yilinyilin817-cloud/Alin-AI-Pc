@@ -1,0 +1,21 @@
+name: home_control
+description: 控制智能家居设备（MQTT）
+parameters:
+  - name: device
+    type: string
+    required: true
+    description: 设备名
+  - name: action
+    type: string
+    required: true
+    description: 操作（on/off/toggle）
+  - name: value
+    type: any
+    required: false
+    description: 参数值（如温度、颜色）
+executor:
+  type: python
+  module: skills.home_control
+  function: run
+permissions: [network]
+approval_mode: once

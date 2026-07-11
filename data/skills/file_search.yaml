@@ -1,0 +1,17 @@
+name: file_search
+description: 搜索本地文件
+parameters:
+  - name: query
+    type: string
+    required: true
+    description: 文件名关键词
+  - name: dir
+    type: string
+    required: false
+    description: 搜索目录（默认为用户目录）
+executor:
+  type: rust
+  module: builtin
+  function: file_search
+permissions: [filesystem]
+approval_mode: once

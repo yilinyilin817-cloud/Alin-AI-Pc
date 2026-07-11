@@ -1,0 +1,29 @@
+name: note_take
+description: 管理个人笔记：保存新笔记、搜索笔记、列出所有笔记。当用户说"帮我记一下"、"记个笔记"、"查一下我之前的笔记"、"我的笔记里有什么关于XX的"时使用。
+parameters:
+  - name: action
+    type: string
+    required: true
+    description: 操作类型：save（保存笔记）、search（搜索笔记）、list（列出所有笔记）、delete（删除笔记）
+  - name: content
+    type: string
+    required: false
+    description: 笔记内容（action=save时必填）
+  - name: keyword
+    type: string
+    required: false
+    description: 搜索关键词（action=search时使用）
+  - name: tags
+    type: string
+    required: false
+    description: 标签，逗号分隔（如 "工作,项目A"），action=save时可选
+  - name: note_id
+    type: string
+    required: false
+    description: 笔记ID（action=delete时必填）
+executor:
+  type: rust
+  module: builtin
+  function: note_take
+permissions: []
+approval_mode: once

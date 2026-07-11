@@ -1,0 +1,13 @@
+name: system_info
+description: 查询系统状态信息，包括CPU使用率、内存使用、磁盘空间、电池电量、系统运行时间等。当用户问"电脑卡不卡"、"还剩多少内存"、"电池还有多少"等时使用。
+parameters:
+  - name: query
+    type: string
+    required: false
+    description: 查询内容：cpu（CPU信息）、memory（内存）、disk（磁盘）、battery（电池）、os（操作系统信息）、all（全部信息，默认）
+executor:
+  type: rust
+  module: builtin
+  function: system_info
+permissions: []
+approval_mode: once

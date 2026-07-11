@@ -1,0 +1,34 @@
+pub mod capture;
+pub mod cloud_provider;
+pub mod cloud_tts_provider;
+pub mod companion;
+pub mod knowledge;
+pub mod memory;
+pub mod model;
+pub mod plugin;
+pub mod settings;
+pub mod skill;
+pub mod voice;
+pub mod wechat;
+pub mod workflow;
+
+mod chat;
+mod persona;
+mod system;
+
+pub use capture::*;
+pub use chat::*;
+pub use cloud_provider::*;
+pub use cloud_tts_provider::*;
+pub use companion::*;
+pub use knowledge::*;
+pub use memory::*;
+pub use model::*;
+pub use persona::*;
+pub use plugin::*;
+pub use settings::*;
+pub use skill::*;
+pub use system::*;
+pub use voice::*;
+pub use wechat::*;
+pub use workflow::*;

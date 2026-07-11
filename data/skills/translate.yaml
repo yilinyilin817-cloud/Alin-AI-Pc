@@ -1,0 +1,21 @@
+name: translate
+description: 翻译文本。使用免费翻译API，支持多种语言互译。当用户说"翻译"、"这段话用英文怎么说"、"帮我把这段翻成日语"等时使用。
+parameters:
+  - name: text
+    type: string
+    required: true
+    description: 要翻译的文本
+  - name: from_lang
+    type: string
+    required: false
+    description: 源语言代码（如 zh、en、ja、ko、fr、de、es 等，默认 auto 自动检测）
+  - name: to_lang
+    type: string
+    required: false
+    description: 目标语言代码（如 zh、en、ja、ko、fr、de、es 等，默认 en）
+executor:
+  type: python
+  module: skills.translate
+  function: run
+permissions: [network]
+approval_mode: once

@@ -1,0 +1,17 @@
+name: clipboard
+description: 读取或写入系统剪贴板。当用户要求"复制这段文字"、"帮我看看剪贴板里有什么"等时使用。读取不需要审批，写入需要每次确认。
+parameters:
+  - name: action
+    type: string
+    required: true
+    description: 操作类型：read（读取剪贴板内容）、write（写入内容到剪贴板）
+  - name: text
+    type: string
+    required: false
+    description: 要写入剪贴板的文本内容（action=write时必填）
+executor:
+  type: rust
+  module: builtin
+  function: clipboard
+permissions: []
+approval_mode: ask_every_time

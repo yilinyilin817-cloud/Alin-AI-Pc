@@ -1,0 +1,391 @@
+/* ═══════════════════════════════════════════════════════════
+   设计系统：整合 tokens.scss 并扩展
+   暗色 = :root（默认），亮色 = html.light
+   本文件与 global.scss 兼容，可通过 html class 控制字体大小与消息密度
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── 品牌色 ── */
+  --color-primary: #7c6bf0;
+  --color-primary-light: #9d8ff5;
+  --color-primary-dark: #5a4bd0;
+  --color-accent: #f5a8c8;
+  --color-success: #4ade80;
+  --color-success-subtle: rgba(74, 222, 128, 0.15);
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #6b7280;
+
+  /* ── 明暗表面（暗色） ── */
+  --color-bg-base: #1a1b26;
+  --color-bg-elevated: #24253a;
+  --color-bg-surface: #2a2b42;
+  --color-bg-hover: #32335a;
+  --color-bg-chat-user: #2d3155;
+  --color-bg-chat-assistant: #1e2035;
+
+  /* ── 文字 ── */
+  --color-text-primary: #f0f0f8;
+  --color-text-secondary: #9ca3b8;
+  --color-text-muted: #6b7280;
+
+  /* ── 边框 ── */
+  --color-border: #3a3b55;
+  --color-border-light: #2a2b42;
+
+  /* ── 字体 ── */
+  --font-family: "Noto Sans SC", "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-family-code: "JetBrains Mono", "Fira Code", "Consolas", "Monaco", monospace;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+
+  /* ── 间距 ── */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+
+  /* ── 圆角 ── */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* ── 阴影 ── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.16);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 20px rgba(124, 107, 240, 0.15);
+
+  /* ── 层级 ── */
+  --z-index-base: 1;
+  --z-index-dropdown: 100;
+  --z-index-sticky: 200;
+  --z-index-modal: 1000;
+  --z-index-tooltip: 2000;
+
+  /* ── 过渡 ── */
+  --transition: 0.2s ease;
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+  /* ── 语音消息 ── */
+  --voice-message-right-bg: rgba(255, 255, 255, 0.12);
+
+  /* ── 布局 ── */
+  --sidebar-width: 240px;
+  --topbar-height: 56px;
+
+  /* ── 玻璃拟态（暗色） ── */
+  --glass-bg: rgba(36, 37, 58, 0.75);
+  --glass-bg-light: rgba(42, 43, 66, 0.4);
+  --glass-blur: 16px;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --glass-hover-bg: rgba(42, 43, 66, 0.75);
+  --glass-active-bg: rgba(50, 51, 90, 0.8);
+  --glass-glow: 0 0 20px rgba(124, 107, 240, 0.15);
+  --glass-gradient: linear-gradient(135deg, rgba(124, 107, 240, 0.08) 0%, rgba(245, 168, 200, 0.05) 100%);
+
+  /* ── 背景渐变 ── */
+  --bg-gradient-base: radial-gradient(ellipse at 20% 50%, rgba(124, 107, 240, 0.08) 0%, transparent 50%),
+                      radial-gradient(ellipse at 80% 20%, rgba(245, 168, 200, 0.05) 0%, transparent 40%),
+                      var(--color-bg-base);
+
+  /* ── 反色文字（用于渐变/主色背景） ── */
+  --color-text-inverse: #ffffff;
+  --color-text-inverse-secondary: rgba(255, 255, 255, 0.8);
+  --color-text-inverse-muted: rgba(255, 255, 255, 0.7);
+  --color-inverse-hover: rgba(255, 255, 255, 0.15);
+  --color-primary-subtle: rgba(124, 107, 240, 0.1);
+
+  /* ── 主色发光/阴影层级 ── */
+  --shadow-primary-sm: 0 4px 12px rgba(124, 107, 240, 0.3);
+  --shadow-primary-md: 0 4px 16px rgba(124, 107, 240, 0.35);
+  --shadow-primary-lg: 0 12px 48px rgba(124, 107, 240, 0.4);
+  --shadow-primary-hover: 0 6px 16px rgba(124, 107, 240, 0.4);
+  --glow-primary: 0 0 20px rgba(124, 107, 240, 0.15);
+  --glow-primary-sm: 0 0 8px rgba(124, 107, 240, 0.2);
+  --glow-primary-xs: 0 0 4px rgba(124, 107, 240, 0.3);
+
+  /* ── 组件特定阴影/发光 ── */
+  --shadow-topbar: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-input: 0 -2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-input-focus: 0 -2px 12px rgba(0, 0, 0, 0.08), 0 0 0 2px rgba(124, 107, 240, 0.2), 0 0 24px rgba(124, 107, 240, 0.12);
+  --shadow-bubble-user: 0 4px 16px rgba(124, 107, 240, 0.35), 0 0 24px rgba(124, 107, 240, 0.15);
+  --shadow-bubble-assistant: var(--glass-shadow), 0 0 20px rgba(124, 107, 240, 0.05);
+  --shadow-bubble-hover: 0 6px 20px rgba(124, 107, 240, 0.14), 0 0 28px rgba(124, 107, 240, 0.08);
+  --shadow-avatar: var(--shadow-primary-sm);
+  --shadow-text: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-brand-icon: 0 0 12px rgba(124, 107, 240, 0.4);
+  --icon-glow: drop-shadow(0 0 12px rgba(124, 107, 240, 0.25));
+
+  /* ── 工具调用卡片 ── */
+  --tool-bg: rgba(124, 107, 240, 0.02);
+  --tool-border: rgba(124, 107, 240, 0.15);
+  --tool-border-hover: rgba(124, 107, 240, 0.25);
+  --tool-shadow-hover: 0 2px 8px rgba(124, 107, 240, 0.08);
+  --tool-header-hover-bg: rgba(124, 107, 240, 0.04);
+  --tool-icon-bg: linear-gradient(135deg, rgba(124, 107, 240, 0.1), rgba(90, 75, 208, 0.15));
+  --tool-content-border: rgba(124, 107, 240, 0.1);
+  --tool-content-bg: rgba(0, 0, 0, 0.01);
+  --tool-section-bg: rgba(0, 0, 0, 0.03);
+
+  /* ── 输入框附件 ── */
+  --attachment-remove-bg: rgba(0, 0, 0, 0.5);
+
+  /* ── 打字指示器流光 ── */
+  --typing-shimmer-gradient: linear-gradient(90deg, transparent, rgba(124, 107, 240, 0.12), rgba(245, 168, 200, 0.1), transparent);
+
+  /* ── 微信页面特定 ── */
+  --wechat-qrcode-bg: #ffffff;
+  --wechat-qrcode-fg: #000000;
+  --wechat-session-active-bg: rgba(120, 119, 198, 0.12);
+  --wechat-bubble-outbound-gradient: linear-gradient(135deg, #a8edea 0%, #6dd5fa 100%);
+  --wechat-bubble-outbound-color: #0c2340;
+  --wechat-bubble-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  /* ── 技能市场 ── */
+  --skill-icon-glow: drop-shadow(0 0 8px rgba(124, 107, 240, 0.3));
+
+  /* ── 设置页 ── */
+  --settings-art-text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+
+  /* ── 消息密度（暗色，可被 html class 覆盖） ── */
+  --chat-message-gap: 12px;
+  --chat-message-padding: 14px;
+  --chat-bubble-padding: 12px 16px;
+  --chat-input-height: 64px;
+
+  /* ══════════════════════════════════════════════════════
+     Element Plus 暗色覆盖
+     ══════════════════════════════════════════════════════ */
+  --el-bg-color: #1a1b26;
+  --el-bg-color-overlay: #24253a;
+  --el-bg-color-page: #1a1b26;
+  --el-border-color: #3a3b55;
+  --el-border-color-light: #3a3b55;
+  --el-border-color-lighter: #2a2b42;
+  --el-text-color-primary: #f0f0f8;
+  --el-text-color-regular: #9ca3b8;
+  --el-text-color-secondary: #9ca3b8;
+  --el-text-color-placeholder: #4b5563;
+  --el-color-white: #1a1b26;
+  --el-color-black: #e8e8f0;
+  --el-fill-color: #2a2b42;
+  --el-fill-color-blank: #1a1b26;
+  --el-fill-color-light: #2a2b42;
+  --el-fill-color-lighter: #24253a;
+  --el-fill-color-extra-light: #1e2035;
+  --el-mask-color: rgba(0, 0, 0, 0.6);
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: #9ca3b8;
+  --el-menu-hover-bg-color: #2a2b42;
+  --el-menu-active-color: #7c6bf0;
+  --el-card-bg-color: #24253a;
+  --el-table-bg-color: #1a1b26;
+  --el-table-tr-bg-color: transparent;
+  --el-table-row-hover-bg-color: #2a2b42;
+  --el-table-border-color: #3a3b55;
+  --el-table-header-bg-color: #24253a;
+  --el-table-header-text-color: #9ca3b8;
+  --el-color-primary: #7c6bf0;
+  --el-color-primary-light-3: #9d8ff5;
+  --el-color-primary-light-8: #2d3155;
+  --el-color-primary-dark-2: #5a4bd0;
+  --el-color-success: #4ade80;
+  --el-color-warning: #fbbf24;
+  --el-color-danger: #f87171;
+  --el-color-info: #6b7280;
+  --el-color-error: #f87171;
+  --el-input-bg-color: #1a1b26;
+  --el-input-focus-border-color: #7c6bf0;
+  --el-input-border-color: #3a3b55;
+  --el-input-hover-border-color: #7c6bf0;
+  --el-input-placeholder-color: #4b5563;
+  --el-input-text-color: #e8e8f0;
+  --el-tag-bg-color: #2a2b42;
+  --el-tag-text-color: #9ca3b8;
+  --el-tag-border-color: #3a3b55;
+  --el-alert-bg-color: #24253a;
+  --el-drawer-bg-color: #24253a;
+  --el-dialog-bg-color: #24253a;
+  --el-overlay-color: rgba(0, 0, 0, 0.6);
+  --el-popper-bg-color: #24253a;
+  --el-popover-bg-color: #24253a;
+  --el-tooltip-bg-color: #32335a;
+  --el-divider-color: #3a3b55;
+  --el-upload-dragger-bg-color: #1a1b26;
+  --el-upload-dragger-hover-bg-color: #24253a;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* ═════════════════════════════════════════════════════
+   亮色主题
+   ═════════════════════════════════════════════════════ */
+html.light {
+  --color-bg-base: #f5f6fa;
+  --color-bg-elevated: #ffffff;
+  --color-bg-surface: #eef0f6;
+  --color-bg-hover: #e2e4ed;
+  --color-bg-chat-user: #e8e4ff;
+  --color-bg-chat-assistant: #ffffff;
+  --color-border: #e2e4ed;
+  --color-border-light: #eef0f6;
+  --color-text-primary: #1a1b26;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+
+  /* Element Plus 亮色 */
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-bg-color-page: #f5f6fa;
+  --el-border-color: #e2e4ed;
+  --el-border-color-light: #e2e4ed;
+  --el-border-color-lighter: #eef0f6;
+  --el-text-color-primary: #1a1b26;
+  --el-text-color-regular: #4b5563;
+  --el-text-color-secondary: #6b7280;
+  --el-text-color-placeholder: #9ca3b8;
+  --el-color-white: #ffffff;
+  --el-color-black: #1a1b26;
+  --el-fill-color: #eef0f6;
+  --el-fill-color-blank: #ffffff;
+  --el-fill-color-light: #eef0f6;
+  --el-fill-color-lighter: #f5f6fa;
+  --el-fill-color-extra-light: #fafafa;
+  --el-mask-color: rgba(0, 0, 0, 0.3);
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: #4b5563;
+  --el-menu-hover-bg-color: #eef0f6;
+  --el-menu-active-color: #7c6bf0;
+  --el-card-bg-color: #ffffff;
+  --el-table-bg-color: #ffffff;
+  --el-table-tr-bg-color: transparent;
+  --el-table-row-hover-bg-color: #f5f6fa;
+  --el-table-border-color: #e2e4ed;
+  --el-table-header-bg-color: #f5f6fa;
+  --el-table-header-text-color: #4b5563;
+  --el-color-primary: #7c6bf0;
+  --el-color-primary-light-3: #9d8ff5;
+  --el-color-primary-light-8: #f0edff;
+  --el-color-primary-dark-2: #5a4bd0;
+  --el-input-bg-color: #ffffff;
+  --el-input-focus-border-color: #7c6bf0;
+  --el-input-border-color: #e2e4ed;
+  --el-input-hover-border-color: #7c6bf0;
+  --el-input-placeholder-color: #9ca3b8;
+  --el-input-text-color: #1a1b26;
+  --el-tag-bg-color: #eef0f6;
+  --el-tag-text-color: #4b5563;
+  --el-tag-border-color: #e2e4ed;
+  --el-alert-bg-color: #ffffff;
+  --el-drawer-bg-color: #ffffff;
+  --el-dialog-bg-color: #ffffff;
+  --el-overlay-color: rgba(0, 0, 0, 0.3);
+  --el-popper-bg-color: #ffffff;
+  --el-popover-bg-color: #ffffff;
+  --el-tooltip-bg-color: #32335a;
+  --el-divider-color: #e2e4ed;
+  --el-upload-dragger-bg-color: #ffffff;
+  --el-upload-dragger-hover-bg-color: #f5f6fa;
+
+  /* ── 玻璃拟态（亮色） ── */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-light: rgba(255, 255, 255, 0.5);
+  --glass-blur: 16px;
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-border-hover: rgba(255, 255, 255, 0.8);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-hover-bg: rgba(255, 255, 255, 0.85);
+  --glass-active-bg: rgba(255, 255, 255, 0.95);
+  --glass-glow: 0 0 20px rgba(124, 107, 240, 0.1);
+  --glass-gradient: linear-gradient(135deg, rgba(124, 107, 240, 0.05) 0%, rgba(245, 168, 200, 0.03) 100%);
+
+  /* ── 背景渐变 ── */
+  --bg-gradient-base: radial-gradient(ellipse at 20% 50%, rgba(124, 107, 240, 0.05) 0%, transparent 50%),
+                      radial-gradient(ellipse at 80% 20%, rgba(245, 168, 200, 0.03) 0%, transparent 40%),
+                      var(--color-bg-base);
+
+  /* ── 语音消息（亮色） ── */
+  --voice-message-right-bg: rgba(124, 107, 240, 0.12);
+
+  /* ── 组件特定阴影/发光（亮色） ── */
+  --shadow-topbar: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-input: 0 -2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-input-focus: 0 -2px 12px rgba(0, 0, 0, 0.06), 0 0 0 2px rgba(124, 107, 240, 0.15), 0 0 24px rgba(124, 107, 240, 0.1);
+  --shadow-text: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  /* ── 工具调用卡片（亮色） ── */
+  --tool-bg: rgba(124, 107, 240, 0.03);
+  --tool-border: rgba(124, 107, 240, 0.12);
+  --tool-border-hover: rgba(124, 107, 240, 0.2);
+  --tool-shadow-hover: 0 2px 8px rgba(124, 107, 240, 0.06);
+  --tool-header-hover-bg: rgba(124, 107, 240, 0.05);
+  --tool-icon-bg: linear-gradient(135deg, rgba(124, 107, 240, 0.08), rgba(90, 75, 208, 0.12));
+  --tool-content-border: rgba(124, 107, 240, 0.08);
+  --tool-content-bg: rgba(0, 0, 0, 0.02);
+  --tool-section-bg: rgba(0, 0, 0, 0.04);
+}
+
+/* ═════════════════════════════════════════════════════
+   字体大小工具类
+   ═════════════════════════════════════════════════════ */
+html.text-size-small {
+  font-size: 13px;
+  --font-size-base: 13px;
+}
+
+html.text-size-default {
+  font-size: 16px;
+  --font-size-base: 14px;
+}
+
+html.text-size-large {
+  font-size: 18px;
+  --font-size-base: 16px;
+}
+
+/* ═════════════════════════════════════════════════════
+   消息密度工具类
+   ═════════════════════════════════════════════════════ */
+html.density-compact {
+  --chat-message-gap: 6px;
+  --chat-message-padding: 8px;
+  --chat-bubble-padding: 8px 12px;
+  --chat-input-height: 48px;
+}
+
+html.density-default {
+  --chat-message-gap: 12px;
+  --chat-message-padding: 14px;
+  --chat-bubble-padding: 12px 16px;
+  --chat-input-height: 64px;
+}
+
+html.density-cozy {
+  --chat-message-gap: 20px;
+  --chat-message-padding: 20px;
+  --chat-bubble-padding: 16px 20px;
+  --chat-input-height: 80px;
+}
+
+/* ═════════════════════════════════════════════════════
+   焦点环
+   ═════════════════════════════════════════════════════ */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

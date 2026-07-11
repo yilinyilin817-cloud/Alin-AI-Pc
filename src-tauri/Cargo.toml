@@ -1,0 +1,94 @@
+[package]
+name = "ai-companion"
+version = "0.1.0"
+description = "AI 伴侣 - 全本地化多模态桌面应用"
+authors = ["rqsd"]
+edition = "2021"
+
+[lib]
+name = "ai_companion_lib"
+crate-type = ["staticlib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[features]
+default = ["perception"]
+# 感知模块：截屏 + 音频 I/O（screenshots + cpal）
+perception = ["dep:screenshots", "dep:cpal", "dep:rodio"]
+# 摄像头采集（nokhwa，平台工具链要求高，默认关闭）
+camera = ["dep:nokhwa"]
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-window-state = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+uuid = { version = "1", features = ["v4"] }
+zip = "2"
+tokio = { version = "1", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# HTTP 客户端（Ollama / Qdrant / 联网技能）
+reqwest = { version = "0.12", features = ["json", "stream"] }
+bytes = "1"
+futures-util = "0.3"
+async-stream = "0.3"
+tokio-stream = "0.1"
+
+# 错误处理
+anyhow = "1"
+async-trait = "0.1"
+
+# Worker IPC：MessagePack over stdin/stdout
+rmp-serde = "1"
+
+# 向量存储（sqlite-vec）
+sqlite-vec = "0.1"
+
+# 文件/目录工具
+walkdir = "2"
+dirs = "5"
+regex = "1"
+urlencoding = "2"
+
+# 日志
+log = "0.4"
+env_logger = "0.11"
+
+# 感知模块（可选，由 features 控制）
+screenshots = { version = "0.8", optional = true }
+cpal = { version = "0.15", optional = true }
+rodio = { version = "0.19", optional = true }
+nokhwa = { version = "0.10", features = ["input-native"], optional = true }
+
+# Base64 编码（Ollama 图像注入）
+base64 = "0.22"
+
+# AES-128-ECB 解密（iLink 媒体）
+aes = "0.8"
+cbc = "0.1"
+ecb = "0.1"
+cipher = { version = "0.4", features = ["block-padding"] }
+rand = "0.8"
+
+# 安全数学表达式求值
+meval = "0.2"
+
+# 系统信息监控
+sysinfo = "0.31"
+
+# 跨平台剪贴板
+arboard = "3"
+
+[target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
+tauri-plugin-global-shortcut = "2"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+opt-level = "z"

@@ -1,0 +1,21 @@
+name: web_search
+description: 搜索互联网信息（需联网授权）。当用户问需要最新信息的问题时使用，如新闻、实时数据、最新资讯等。支持时间范围过滤以获得更时效的结果。
+parameters:
+  - name: query
+    type: string
+    required: true
+    description: 搜索关键词（越具体越好，如 "2026年世界杯赛程"）
+  - name: count
+    type: integer
+    required: false
+    description: 返回结果数（默认5，最大10）
+  - name: time_range
+    type: string
+    required: false
+    description: 时间过滤范围：day（一天内）、week（一周内）、month（一月内）、year（一年内）。用于获取时效性结果，如搜索新闻用 day 或 week。
+executor:
+  type: rust
+  module: builtin
+  function: web_search
+permissions: [network]
+approval_mode: ask_every_time

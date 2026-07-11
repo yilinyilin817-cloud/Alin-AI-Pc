@@ -1,0 +1,41 @@
+name: random
+description: 生成随机内容：随机数、掷骰子、随机密码、从列表中随机选择、抽签等。当用户说"帮我抽一个"、"生成随机密码"、"掷个骰子"、"从A/B/C里选一个"时使用。
+parameters:
+  - name: type
+    type: string
+    required: true
+    description: 随机类型：number（随机数，需min/max）、dice（掷骰子，需faces面数）、password（随机密码，需length）、pick（从列表中随机选择，需items）
+  - name: min
+    type: integer
+    required: false
+    description: 最小值（type=number时使用，默认1）
+  - name: max
+    type: integer
+    required: false
+    description: 最大值（type=number时使用，默认100）
+  - name: faces
+    type: integer
+    required: false
+    description: 骰子面数（type=dice时使用，默认6）
+  - name: count
+    type: integer
+    required: false
+    description: 掷骰子次数（type=dice时使用，默认1）
+  - name: length
+    type: integer
+    required: false
+    description: 密码长度（type=password时使用，默认16）
+  - name: items
+    type: string
+    required: false
+    description: 候选项列表，逗号分隔（如 "选项A,选项B,选项C"），type=pick时必填
+  - name: pick_count
+    type: integer
+    required: false
+    description: 选取数量（type=pick时使用，默认1）
+executor:
+  type: rust
+  module: builtin
+  function: random
+permissions: []
+approval_mode: once

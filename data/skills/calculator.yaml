@@ -1,0 +1,13 @@
+name: calculator
+description: 安全计算数学表达式。支持加减乘除、百分比、平方根、三角函数、对数等。当用户要求计算、算数、求值等时使用。
+parameters:
+  - name: expression
+    type: string
+    required: true
+    description: 数学表达式（如 2+3*4、sqrt(16)、sin(pi/2)、100*0.85、2^10）
+executor:
+  type: rust
+  module: builtin
+  function: calculator
+permissions: []
+approval_mode: once

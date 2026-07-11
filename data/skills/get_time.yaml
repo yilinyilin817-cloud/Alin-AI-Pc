@@ -1,0 +1,37 @@
+name: get_time
+description: 查询当前时间、日期、时区转换、日期计算和倒计时。当用户问"现在几点"、"今天几号"、"星期几"、"距离XX还有多少天"、"XX天后是几号"、"美国现在几点"等问题时使用此技能。
+parameters:
+  - name: operation
+    type: string
+    required: false
+    description: 操作类型：current（当前时间，默认）、add（日期加减）、diff（日期差）、countdown（倒计时）、timezone（时区转换）
+  - name: days
+    type: integer
+    required: false
+    description: 加减天数（operation=add时使用，正数为未来，负数为过去）
+  - name: date1
+    type: string
+    required: false
+    description: 第一个日期（ISO 8601 格式，如 2026-07-08），用于diff/countdown操作
+  - name: date2
+    type: string
+    required: false
+    description: 第二个日期（ISO 8601 格式），用于diff操作
+  - name: target
+    type: string
+    required: false
+    description: 目标日期（ISO 8601 格式），用于countdown操作
+  - name: timezone
+    type: string
+    required: false
+    description: 目标时区（如 America/New_York、Asia/Tokyo、Europe/London），用于时区转换
+  - name: format
+    type: string
+    required: false
+    description: 输出格式（full/datetime/date/time/lunar，默认 full）
+executor:
+  type: rust
+  module: builtin
+  function: get_time
+permissions: []
+approval_mode: once
