@@ -115,14 +115,21 @@ def handle(req_id, method, params):
     elif method == "transcribe":
         transcribe(req_id, params)
     elif method == "health":
-        send_result(req_id, _get_health())
+        send_result(req_id, _get_health(_model_ref_from_params(params)))
     else:
         send_message({"id": req_id, "result": None, "error": f"Unknown: {method}", "done": True})
 
 
-def _get_health():
+def _model_ref_from_params(params):
+    model_path = params.get("model_path")
+    if model_path and Path(model_path).exists():
+        return model_path
+    return params.get("model_size", "whisper")
+
+
+def _get_health(model_id: str = "whisper"):
     try:
-        _load_model()
+        _load_model(model_id)
         return {
             "status": "ready",
             "model": _model_path,
@@ -136,7 +143,7 @@ def _get_health():
 def transcribe(req_id, params):
     audio_data = params.get("audio_bytes")
     audio_path = params.get("audio_path")
-    model_id = params.get("model_size", "whisper")
+    model_id = _model_ref_from_params(params)
     language = params.get("language")
 
     if not audio_data and not audio_path:

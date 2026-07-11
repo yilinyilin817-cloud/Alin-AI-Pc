@@ -14,6 +14,24 @@ use tauri::State;
 type StopTx = mpsc::Sender<mpsc::Sender<Vec<u8>>>;
 static RECORDING: Mutex<Option<(JoinHandle<()>, StopTx)>> = Mutex::new(None);
 
+fn active_asr_params(state: &AppState, audio_bytes: Vec<u8>) -> serde_json::Value {
+    if let Some(runtime) = crate::commands::model::active_model_runtime(state, "asr") {
+        serde_json::json!({
+            "audio_bytes": audio_bytes,
+            "model_size": runtime.download_id,
+            "model_path": runtime.local_path,
+        })
+    } else {
+        serde_json::json!({ "audio_bytes": audio_bytes })
+    }
+}
+
+fn active_tts_backend(state: &AppState) -> Option<String> {
+    crate::commands::model::active_model_runtime(state, "tts")
+        .map(|runtime| crate::commands::model::tts_backend_for_provider(&runtime.provider_id).to_string())
+        .filter(|backend| backend != "auto")
+}
+
 /// 解析 WAV 文件头，返回 (channels, sample_rate, bits_per_sample)
 fn parse_wav_header(wav: &[u8]) -> Option<(u16, u32, u16)> {
     if wav.len() < 44 {
@@ -116,7 +134,7 @@ pub async fn stop_recording(state: State<'_, AppState>) -> Result<String, String
     log::info!("🎤 收到录音数据: {} bytes，发送给 ASR Worker", wav_bytes.len());
 
     // 发送给 ASR Worker
-    let params = serde_json::json!({ "audio_bytes": wav_bytes });
+    let params = active_asr_params(&state, wav_bytes);
     let req = build_request("transcribe", params);
 
     let pool = state.worker_pool.clone();
@@ -243,7 +261,7 @@ pub async fn get_voice_transcript_impl(state: &AppState, audio_base64: &str) -> 
         return Err("音频数据为空".into());
     }
 
-    let params = serde_json::json!({ "audio_bytes": wav_bytes });
+    let params = active_asr_params(state, wav_bytes);
     let req = build_request("transcribe", params);
 
     let pool = state.worker_pool.clone();
@@ -277,6 +295,7 @@ pub async fn synthesize_speech(
     }
 
     // 如果指定了角色，读取角色的 voice 配置
+    let active_backend = active_tts_backend(&state);
     let (tts_backend, tts_voice_id, tts_speed) = if let Some(ref pid) = persona_id {
         match crate::storage::repo::get_persona(&state.db, pid) {
             Ok(Some(row)) => {
@@ -284,12 +303,17 @@ pub async fn synthesize_speech(
                 let engine = voice.get("ttsEngine").and_then(|v| v.as_str()).unwrap_or("auto");
                 let vid = voice.get("voiceId").and_then(|v| v.as_str()).map(|s| s.to_string());
                 let speed = voice.get("params").and_then(|p| p.get("speed")).and_then(|v| v.as_f64()).unwrap_or(1.0);
-                (engine.to_string(), vid.or(voice_id), speed)
+                let backend = if engine == "auto" {
+                    active_backend.clone().unwrap_or_else(|| "auto".to_string())
+                } else {
+                    engine.to_string()
+                };
+                (backend, vid.or(voice_id), speed)
             }
-            _ => ("auto".to_string(), voice_id, 1.0),
+            _ => (active_backend.unwrap_or_else(|| "auto".to_string()), voice_id, 1.0),
         }
     } else {
-        ("auto".to_string(), voice_id, 1.0)
+        (active_backend.unwrap_or_else(|| "auto".to_string()), voice_id, 1.0)
     };
 
     let params = serde_json::json!({

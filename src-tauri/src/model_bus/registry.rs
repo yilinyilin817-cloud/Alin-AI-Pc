@@ -27,14 +27,14 @@ pub async fn load_active_providers(
         rows.collect::<Result<Vec<_>, _>>()
     })?;
 
-    for (id, provider_id, status) in providers {
+    for (_id, provider_id, status) in providers {
         if status == "active" && provider_id.starts_with("ollama/") {
             let model_name = provider_id.trim_start_matches("ollama/");
             let provider = crate::model_bus::ollama::OllamaProvider::new(model_name);
             scheduler
                 .register(Arc::new(provider) as Arc<dyn crate::model_bus::provider::ModelProvider + Send + Sync>)
                 .await;
-            scheduler.set_active(&id).await;
+            scheduler.set_active(model_name).await;
         }
     }
 

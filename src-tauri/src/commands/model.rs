@@ -8,6 +8,13 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 
+#[derive(Debug, Clone)]
+pub struct ActiveModelRuntime {
+    pub provider_id: String,
+    pub download_id: String,
+    pub local_path: Option<String>,
+}
+
 /// 统一解析模型存储目录：优先使用 settings.modelsDir，否则使用 data_dir/models
 pub fn resolve_models_dir(state: &AppState) -> PathBuf {
     state.db.with_conn(|conn| {
@@ -120,6 +127,50 @@ fn model_install_command(model_id: &str, provider_id: &str) -> String {
         format!("ollama pull {}", provider_id.trim_start_matches("ollama/"))
     } else {
         format!("python workers/download_models.py {}", model_download_id(model_id))
+    }
+}
+
+pub fn active_model_runtime(state: &AppState, model_type: &str) -> Option<ActiveModelRuntime> {
+    let models_dir = resolve_models_dir(state);
+    state.db.with_conn(|conn| {
+        conn.query_row(
+            "SELECT id, provider_id, model_path FROM model_config WHERE model_type = ?1 AND is_active = 1 LIMIT 1",
+            [model_type],
+            |row| {
+                let id: String = row.get(0)?;
+                let provider_id: String = row.get(1)?;
+                let model_path: Option<String> = row.get(2)?;
+                let download_id = model_download_id(&id);
+                let local_path = if provider_id.starts_with("ollama/") {
+                    None
+                } else {
+                    Some(model_path.unwrap_or_else(|| {
+                        models_dir.join(&download_id).to_string_lossy().to_string()
+                    }))
+                };
+                Ok(ActiveModelRuntime {
+                    provider_id,
+                    download_id,
+                    local_path,
+                })
+            },
+        )
+    }).ok()
+}
+
+pub fn tts_backend_for_provider(provider_id: &str) -> &'static str {
+    match provider_id {
+        "cosyvoice" => "cosyvoice",
+        "piper" => "piper",
+        _ => "auto",
+    }
+}
+
+fn embedding_model_name(provider_id: &str) -> &'static str {
+    match provider_id {
+        "bge-small" => "BAAI/bge-small-zh-v1.5",
+        "jina-v3" => "jinaai/jina-embeddings-v3",
+        _ => "BAAI/bge-m3",
     }
 }
 
@@ -543,12 +594,33 @@ async fn download_via_python(
 }
 #[tauri::command]
 pub async fn activate_model(state: State<'_, AppState>, model_id: String) -> Result<(), String> {
-    state.db.with_conn(|conn| {
-        let model_type: String = conn.query_row("SELECT model_type FROM model_config WHERE id = ?1", [model_id.clone()], |row| row.get(0))?;
-        conn.execute("UPDATE model_config SET is_active = 0 WHERE model_type = ?1", [model_type])?;
+    let (model_type, provider_id): (String, String) = state.db.with_conn(|conn| {
+        let (model_type, provider_id): (String, String) = conn.query_row(
+            "SELECT model_type, provider_id FROM model_config WHERE id = ?1",
+            [model_id.clone()],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        conn.execute(
+            "UPDATE model_config SET is_active = 0, status = CASE WHEN status = 'active' THEN 'downloaded' ELSE status END WHERE model_type = ?1",
+            [&model_type],
+        )?;
         conn.execute("UPDATE model_config SET is_active = 1, status = 'active' WHERE id = ?1", [model_id])?;
-        Ok(())
-    }).map_err(|e: rusqlite::Error| e.to_string())
+        Ok((model_type, provider_id))
+    }).map_err(|e: rusqlite::Error| e.to_string())?;
+
+    if model_type == "llm" && provider_id.starts_with("ollama/") {
+        let tag = provider_id.trim_start_matches("ollama/");
+        let provider = crate::model_bus::ollama::OllamaProvider::new(tag);
+        state
+            .model_scheduler
+            .register(Arc::new(provider) as Arc<dyn crate::model_bus::provider::ModelProvider + Send + Sync>)
+            .await;
+        state.model_scheduler.set_active(tag).await;
+    } else if matches!(model_type.as_str(), "asr" | "tts" | "embedding") {
+        state.worker_pool.shutdown();
+    }
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -663,6 +735,11 @@ pub async fn test_model(app: tauri::AppHandle, state: State<'_, AppState>, model
             Ok(serde_json::json!({ "success": true, "message": "本地测试未开放" }))
         },
         "asr" => {
+            let runtime = ActiveModelRuntime {
+                provider_id: provider_id.clone(),
+                download_id: model_download_id(&mid),
+                local_path: Some(resolve_models_dir(&state).join(model_download_id(&mid)).to_string_lossy().to_string()),
+            };
             emit_test_step(&app_clone, &mid, "start_worker", "active", Some("启动 ASR 工作进程…")).ok();
             let ping_req = build_request("ping", serde_json::json!({}));
             let ping_result = state.worker_pool.call(WorkerType::Asr, ping_req);
@@ -675,7 +752,10 @@ pub async fn test_model(app: tauri::AppHandle, state: State<'_, AppState>, model
             emit_test_step(&app_clone, &mid, "start_worker", "done", Some("ASR 工作进程就绪")).ok();
 
             emit_test_step(&app_clone, &mid, "ping_test", "active", Some("检查模型加载状态…")).ok();
-            let health_req = build_request("health", serde_json::json!({}));
+            let health_req = build_request("health", serde_json::json!({
+                "model_size": runtime.download_id,
+                "model_path": runtime.local_path,
+            }));
             let health_result = state.worker_pool.call(WorkerType::Asr, health_req);
             let health_ok = match &health_result {
                 Ok(resp) => resp.error.is_none(),
@@ -693,7 +773,9 @@ pub async fn test_model(app: tauri::AppHandle, state: State<'_, AppState>, model
             let test_wav = generate_test_tone_wav(16000, 1.0, 440.0);
             let transcribe_req = build_request("transcribe", serde_json::json!({
                 "audio_bytes": test_wav,
-                "language": "zh"
+                "language": "zh",
+                "model_size": runtime.download_id,
+                "model_path": runtime.local_path,
             }));
             let start = std::time::Instant::now();
             let transcribe_result = state.worker_pool.call(WorkerType::Asr, transcribe_req);
@@ -725,7 +807,7 @@ pub async fn test_model(app: tauri::AppHandle, state: State<'_, AppState>, model
             else { Err(msg) }
         },
         "tts" => {
-            use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
+            let preferred_backend = tts_backend_for_provider(&provider_id);
             emit_test_step(&app_clone, &mid, "start_worker", "active", Some("启动 TTS 工作进程…")).ok();
             let ping_req = build_request("ping", serde_json::json!({}));
             let ping_result = state.worker_pool.call(WorkerType::Tts, ping_req);
@@ -762,7 +844,7 @@ pub async fn test_model(app: tauri::AppHandle, state: State<'_, AppState>, model
             let synth_req = build_request("synthesize", serde_json::json!({
                 "text": test_text,
                 "voice_id": "",
-                "backend": "auto"
+                "backend": preferred_backend
             }));
             let start = std::time::Instant::now();
             let synth_result = state.worker_pool.call(WorkerType::Tts, synth_req);
@@ -815,11 +897,47 @@ pub async fn test_model(app: tauri::AppHandle, state: State<'_, AppState>, model
             let success = result.is_ok();
             let emb_detail = if success { "Embedding 工作进程就绪".to_string() } else { format!("{}", result.as_ref().err().unwrap()) };
             emit_test_step(&app_clone, &mid, "start_worker", if success { "done" } else { "failed" }, Some(&emb_detail)).ok();
-            emit_test_step(&app_clone, &mid, "ping_test", if success { "done" } else { "failed" }, None).ok();
-            emit_test_step(&app_clone, &mid, "verify_output", if success { "done" } else { "failed" }, None).ok();
-            let _ = app_clone.emit("model-test:step", serde_json::json!({"modelId": &mid, "done": true, "success": success,
-                "message": if success { "Embedding 引擎通信正常".to_string() } else { format!("Embedding 通信异常: {}", result.as_ref().err().unwrap()) }}));
-            match result { Ok(_) => Ok(serde_json::json!({ "success": true, "message": "Embedding 引擎通信正常" })), Err(e) => Err(format!("Embedding 通信异常: {e}")) }
+            if !success {
+                emit_test_step(&app_clone, &mid, "ping_test", "failed", None).ok();
+                emit_test_step(&app_clone, &mid, "verify_output", "failed", None).ok();
+                let msg = format!("Embedding 通信异常: {}", result.as_ref().err().unwrap());
+                let _ = app_clone.emit("model-test:step", serde_json::json!({"modelId": &mid, "done": true, "success": false, "message": msg}));
+                return Err(msg);
+            }
+
+            emit_test_step(&app_clone, &mid, "ping_test", "done", None).ok();
+            emit_test_step(&app_clone, &mid, "run_inference", "active", Some("生成测试文本向量…")).ok();
+            let model_path = resolve_models_dir(&state).join(model_download_id(&mid));
+            let embed_req = build_request("embed", serde_json::json!({
+                "texts": ["你好，这是向量模型测试。"],
+                "model_name": embedding_model_name(&provider_id),
+                "model_path": if model_path.exists() { Some(model_path.to_string_lossy().to_string()) } else { None::<String> },
+            }));
+            let start = std::time::Instant::now();
+            let embed_result = state.worker_pool.call(WorkerType::Embedding, embed_req);
+            let latency = start.elapsed().as_millis() as u64;
+            let dim = embed_result.as_ref().ok()
+                .and_then(|resp| resp.result.as_ref())
+                .and_then(|v| v.as_array())
+                .and_then(|arr| arr.first())
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.len())
+                .unwrap_or(0);
+            let final_ok = embed_result.as_ref().map(|resp| resp.error.is_none() && dim > 0).unwrap_or(false);
+            emit_test_step(&app_clone, &mid, "run_inference", if final_ok { "done" } else { "failed" },
+                Some(&if final_ok { format!("向量生成完成 {}ms，维度 {}", latency, dim) } else { "向量生成失败".into() })).ok();
+            emit_test_step(&app_clone, &mid, "verify_output", if final_ok { "done" } else { "failed" }, None).ok();
+
+            let msg = if final_ok {
+                format!("Embedding 引擎就绪 ({}ms，维度 {})", latency, dim)
+            } else {
+                let err = embed_result.as_ref().err().map(|e| e.to_string())
+                    .or_else(|| embed_result.as_ref().ok().and_then(|r| r.error.clone()))
+                    .unwrap_or_else(|| "向量结果为空".into());
+                format!("Embedding 推理异常: {}", &err[..err.len().min(120)])
+            };
+            let _ = app_clone.emit("model-test:step", serde_json::json!({"modelId": &mid, "done": true, "success": final_ok, "latencyMs": latency, "message": msg}));
+            if final_ok { Ok(serde_json::json!({ "success": true, "message": msg, "latencyMs": latency })) } else { Err(msg) }
         },
         _ => {
             let _ = app_clone.emit("model-test:step", serde_json::json!({"modelId": &mid, "done": true, "success": false, "message": "不支持测试"}));
