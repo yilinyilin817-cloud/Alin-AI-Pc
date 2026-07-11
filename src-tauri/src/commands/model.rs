@@ -75,6 +75,54 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
+fn model_download_id(model_id: &str) -> String {
+    let normalized = model_id.strip_prefix("model_").unwrap_or(model_id).replace("_", "-");
+    match normalized.as_str() {
+        "whisper-med" => "whisper-medium".to_string(),
+        _ => normalized,
+    }
+}
+
+fn model_source_label(model_type: &str, provider_id: &str) -> &'static str {
+    if provider_id.starts_with("ollama/") {
+        "Ollama"
+    } else if matches!(provider_id, "cosyvoice" | "funasr" | "bge-m3" | "bge-small" | "chattts") {
+        "ModelScope / HuggingFace"
+    } else if provider_id == "piper" {
+        "HuggingFace"
+    } else if model_type == "embedding" || model_type == "asr" || model_type == "tts" {
+        "HuggingFace"
+    } else {
+        "Local"
+    }
+}
+
+fn model_runtime_hint(model_type: &str, provider_id: &str) -> &'static str {
+    if provider_id.starts_with("ollama/") {
+        "需要本机 Ollama 服务运行；下载后可直接在对话中启用。"
+    } else {
+        match model_type {
+            "asr" => "需要 Python Worker 与 faster-whisper / funasr 依赖；下载后用“功能测试”验证转写链路。",
+            "tts" => match provider_id {
+                "cosyvoice" => "需要 CosyVoice Python 包与 PyTorch；下载后角色音色可使用 cosyvoice。",
+                "chattts" => "需要 ChatTTS 运行依赖；适合对话韵律，但当前 Worker 优先支持 CosyVoice / Piper / pyttsx3。",
+                "piper" => "需要 piper-tts Python 包；CPU 即可实时合成。",
+                _ => "需要 TTS Worker 依赖；下载后用“功能测试”试听合成结果。",
+            },
+            "embedding" => "需要 sentence-transformers；下载后知识库 RAG 与长期记忆会使用向量检索。",
+            _ => "下载后可在模型中心启用并测试。",
+        }
+    }
+}
+
+fn model_install_command(model_id: &str, provider_id: &str) -> String {
+    if provider_id.starts_with("ollama/") {
+        format!("ollama pull {}", provider_id.trim_start_matches("ollama/"))
+    } else {
+        format!("python workers/download_models.py {}", model_download_id(model_id))
+    }
+}
+
 /// 智能描述生成
 fn build_model_desc(name: &str, model_type: &str, provider_id: &str) -> String {
     if provider_id.starts_with("ollama/") {
@@ -139,7 +187,7 @@ pub async fn list_models(state: State<'_, AppState>) -> Result<Vec<Value>, Strin
                                      ollama_names.contains(&format!("{}:latest", tag));
                 status = if exists_in_ollama { "downloaded".to_string() } else { "not_downloaded".to_string() };
             } else if status == "downloaded" || status == "active" {
-                let normalized_id = id.strip_prefix("model_").unwrap_or(&id).replace("_", "-");
+                let normalized_id = model_download_id(&id);
                 let path = match model_path {
                     Some(p) if !p.is_empty() => std::path::PathBuf::from(p),
                     _ => models_dir_path.join(&normalized_id),
@@ -160,6 +208,14 @@ pub async fn list_models(state: State<'_, AppState>) -> Result<Vec<Value>, Strin
                 "vramRequired": vram.unwrap_or_default(),
                 "size": format_size(size_mb),
                 "description": build_model_desc(&name, &model_type, &provider_id),
+                "source": model_source_label(&model_type, &provider_id),
+                "runtimeHint": model_runtime_hint(&model_type, &provider_id),
+                "installCommand": model_install_command(&id, &provider_id),
+                "localPath": if provider_id.starts_with("ollama/") {
+                    serde_json::Value::Null
+                } else {
+                    serde_json::Value::String(models_dir_path.join(model_download_id(&id)).to_string_lossy().to_string())
+                },
             }))
         })?;
 
@@ -329,12 +385,7 @@ async fn download_via_python(
         return Err(format!("找不到下载脚本: {:?}", script_path));
     }
 
-    let normalized_id = mid.strip_prefix("model_").unwrap_or(&mid).replace("_", "-");
-    // 修正模型ID映射：whisper-med -> whisper-medium
-    let normalized_id = match normalized_id.as_str() {
-        "whisper-med" => "whisper-medium".to_string(),
-        _ => normalized_id,
-    };
+    let normalized_id = model_download_id(&mid);
     let backend_arg = state.db.with_conn(|conn| {
         let provider: String = conn.query_row("SELECT provider_id FROM model_config WHERE id = ?1", [mid.clone()], |row| row.get(0)).unwrap_or_default();
         Ok::<_, rusqlite::Error>(if provider.starts_with("modelscope/") { "modelscope" } else { "auto" })
@@ -464,7 +515,7 @@ async fn download_via_python(
             log::info!("[download] {} 下载/检测完成", mid);
         } else if is_cancelled {
             // 清理不完整的下载目录
-            let target_dir = models_dir_for_cleanup.join(&mid_for_cleanup);
+            let target_dir = models_dir_for_cleanup.join(model_download_id(&mid_for_cleanup));
             if target_dir.exists() {
                 let real_entries: Vec<_> = std::fs::read_dir(&target_dir)
                     .ok()
@@ -504,7 +555,7 @@ pub async fn activate_model(state: State<'_, AppState>, model_id: String) -> Res
 pub async fn delete_model(state: State<'_, AppState>, model_id: String) -> Result<(), String> {
     let models_dir = resolve_models_dir(&state);
 
-    let normalized_id = model_id.strip_prefix("model_").unwrap_or(&model_id).replace("_", "-");
+    let normalized_id = model_download_id(&model_id);
     let target_dir = models_dir.join(&normalized_id);
     if target_dir.exists() { let _ = std::fs::remove_dir_all(target_dir); }
 

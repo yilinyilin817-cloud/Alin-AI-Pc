@@ -395,15 +395,29 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("model", nargs="?")
     parser.add_argument("--list", action="store_true")
+    parser.add_argument("--all", action="store_true")
     parser.add_argument("--output", "-o", default="data/models")
     parser.add_argument("--backend", default="auto", choices=["auto", "huggingface", "modelscope"])
     args = parser.parse_args()
 
     if args.list:
         list_models()
+    elif args.all:
+        failed = []
+        for model_id, info in MODELS.items():
+            if info.get("builtin"):
+                continue
+            print(f"\n=== 下载 {model_id} ({info['name']}) ===")
+            if not download_model(model_id, args.output, args.backend):
+                failed.append(model_id)
+        if failed:
+            print(f"\n失败模型: {', '.join(failed)}", file=sys.stderr)
+            sys.exit(1)
     elif args.model:
         success = download_model(args.model, args.output, args.backend)
         sys.exit(0 if success else 1)
+    else:
+        parser.print_help()
 
 if __name__ == "__main__":
     main()

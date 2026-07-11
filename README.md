@@ -92,6 +92,40 @@ python workers/download_models.py bge-m3
 npm run tauri dev
 ```
 
+### 模型下载与部署
+
+桌面端内置“模型中心”，按 LLM / ASR / TTS / Embedding 分类展示模型状态、下载进度、部署命令、本地目录和运行依赖。下载完成后可直接在卡片上启用模型或运行功能测试。
+
+| 类型 | 模型中心入口 | 推荐模型 | 部署依赖 |
+|---|---|---|---|
+| LLM | 对话模型 | Gemma 4 12B、Qwen3-VL 8B、MiniCPM-o 2.6 | Ollama 服务 |
+| ASR | 语音识别 | faster-whisper-large-v3、faster-whisper-medium、FunASR Paraformer-zh | Python Worker、faster-whisper 或 FunASR |
+| TTS | 语音合成 | CosyVoice 2、ChatTTS、Piper TTS | Python Worker、pyttsx3，按需安装 CosyVoice / Piper / ChatTTS |
+| Embedding | 向量检索 | bge-m3、bge-small-zh-v1.5、jina-embeddings-v3 | sentence-transformers |
+
+常用命令：
+
+```bash
+# 查看脚本支持的模型
+python workers/download_models.py --list
+
+# 下载 TTS 模型
+python workers/download_models.py cosyvoice
+python workers/download_models.py chattts
+python workers/download_models.py piper
+
+# 下载其他模型
+python workers/download_models.py whisper-medium
+python workers/download_models.py funasr
+python workers/download_models.py bge-m3
+python workers/download_models.py jina-v3
+
+# 批量下载全部非内置模型
+python workers/download_models.py --all
+```
+
+模型中心会自动识别下载目录并同步数据库状态。Ollama 模型使用 `ollama pull <tag>`，其他模型默认下载到 `data/models/<model-id>`；也可以在设置中调整模型目录。
+
 ### 打包发布
 
 ```bash

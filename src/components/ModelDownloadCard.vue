@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { ModelConfig } from "@/types";
-import { Close } from "@element-plus/icons-vue";
+import { computed } from "vue";
+import { Close, Download, FolderOpened, Link, Microphone, Cpu, Service, ChatDotRound } from "@element-plus/icons-vue";
 
-defineProps<{
+const props = defineProps<{
   model: ModelConfig;
 }>();
 
@@ -20,16 +21,41 @@ const statusLabel: Record<string, string> = {
   downloaded: "已下载",
   active: "使用中",
 };
+
+const typeLabel: Record<string, string> = {
+  llm: "对话模型",
+  asr: "语音识别",
+  tts: "语音合成",
+  embedding: "向量检索",
+  emotion: "情绪识别",
+};
+
+const typeIcon = computed(() => {
+  if (props.model.modelType === "tts") return Microphone;
+  if (props.model.modelType === "embedding") return Cpu;
+  if (props.model.modelType === "asr") return Service;
+  return ChatDotRound;
+});
+
+const statusType = computed(() => {
+  if (props.model.isActive) return "success";
+  if (props.model.status === "downloading") return "warning";
+  if (props.model.status === "downloaded") return "success";
+  return "info";
+});
 </script>
 
 <template>
   <el-card class="model-card" :class="{ 'is-active': model.isActive }" shadow="hover">
     <div class="card-header">
-      <h3 class="model-name">{{ model.name }}</h3>
-      <el-tag
-        :type="model.isActive ? 'success' : model.status === 'downloading' ? 'warning' : 'info'"
-        size="small"
-      >
+      <div class="title-group">
+        <el-icon class="type-icon"><component :is="typeIcon" /></el-icon>
+        <div>
+          <h3 class="model-name">{{ model.name }}</h3>
+          <span class="model-type">{{ typeLabel[model.modelType] || model.modelType }}</span>
+        </div>
+      </div>
+      <el-tag :type="statusType" size="small">
         {{ statusLabel[model.status] }}
       </el-tag>
     </div>
@@ -37,8 +63,25 @@ const statusLabel: Record<string, string> = {
     <p class="model-desc">{{ model.description }}</p>
 
     <div class="model-meta">
+      <el-tag v-if="model.source" size="small" effect="plain">
+        <el-icon><Link /></el-icon>
+        {{ model.source }}
+      </el-tag>
       <el-tag v-if="model.vramRequired" size="small" effect="plain">显存 {{ model.vramRequired }}</el-tag>
       <el-tag v-if="model.size" size="small" effect="plain">{{ model.size }}</el-tag>
+    </div>
+
+    <p v-if="model.runtimeHint" class="runtime-hint">{{ model.runtimeHint }}</p>
+
+    <div class="deploy-info">
+      <div v-if="model.installCommand" class="deploy-row">
+        <el-icon><Download /></el-icon>
+        <code>{{ model.installCommand }}</code>
+      </div>
+      <div v-if="model.localPath" class="deploy-row">
+        <el-icon><FolderOpened /></el-icon>
+        <span>{{ model.localPath }}</span>
+      </div>
     </div>
 
     <el-progress
@@ -86,7 +129,7 @@ const statusLabel: Record<string, string> = {
         </el-button>
 
         <el-button
-          v-if="model.isActive"
+          v-if="model.isActive || model.status === 'downloaded'"
           size="small"
           type="success"
           plain
@@ -138,11 +181,38 @@ const statusLabel: Record<string, string> = {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+  gap: 12px;
+}
+
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.type-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
 }
 
 .model-name {
   font-size: 15px;
   font-weight: 600;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.model-type {
+  font-size: 12px;
+  color: var(--color-text-muted);
 }
 
 .model-desc {
@@ -154,8 +224,45 @@ const statusLabel: Record<string, string> = {
 
 .model-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 12px;
+}
+
+.runtime-hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.deploy-info {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.deploy-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+
+  code,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  code {
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: var(--glass-bg-light);
+    color: var(--color-text-secondary);
+  }
 }
 
 .progress {
@@ -165,6 +272,7 @@ const statusLabel: Record<string, string> = {
 .card-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
 }
 </style>

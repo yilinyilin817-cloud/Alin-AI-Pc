@@ -17,6 +17,10 @@ export interface ModelConfig {
   status: DownloadStatus;
   progress?: number;
   isActive: boolean;
+  source?: string;
+  runtimeHint?: string;
+  installCommand?: string;
+  localPath?: string | null;
 }
 
 export interface DownloadTask {

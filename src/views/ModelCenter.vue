@@ -14,7 +14,7 @@ import {
 import { useModelStore } from "@/stores/model";
 import type { ModelConfig, ModelType } from "@/types";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Setting, Check } from "@element-plus/icons-vue";
+import { Setting, Check, Download, Cpu, Microphone, Connection } from "@element-plus/icons-vue";
 
 // ── 状态 ──
 
@@ -47,6 +47,49 @@ const filteredModels = computed(() =>
 const activeLlm = computed(() =>
   models.value.find((m) => m.modelType === "llm" && m.isActive),
 );
+
+const typeStats = computed(() => {
+  const all = filteredModels.value;
+  const ready = all.filter((m) => m.status === "downloaded" || m.status === "active" || m.isActive).length;
+  const downloading = all.filter((m) => m.status === "downloading").length;
+  return { total: all.length, ready, downloading };
+});
+
+const deploymentGuide = computed(() => {
+  const guide: Record<ModelType, { title: string; body: string; deps: string[]; action: string }> = {
+    llm: {
+      title: "LLM 本地对话模型",
+      body: "Ollama 模型通过本机服务拉取和运行，下载完成后在这里启用即可进入对话链路。",
+      deps: ["Ollama 服务", "足够显存或内存", "网络可访问 Ollama registry"],
+      action: "下载后启用模型，再用功能测试验证生成能力。",
+    },
+    asr: {
+      title: "ASR 语音识别模型",
+      body: "ASR 模型由 Python Worker 调用，负责把录音转成文字。",
+      deps: ["Python 3.10+", "faster-whisper 或 FunASR", "麦克风权限"],
+      action: "下载后启用并运行功能测试，确认录音转写链路可用。",
+    },
+    tts: {
+      title: "TTS 语音合成模型",
+      body: "TTS 支持 CosyVoice、Piper 和系统 pyttsx3 降级；角色音色会按配置选择可用后端。",
+      deps: ["Python 3.10+", "pyttsx3 基础引擎", "CosyVoice / Piper 可选依赖"],
+      action: "优先部署 CosyVoice 2，下载后使用功能测试试听合成结果。",
+    },
+    embedding: {
+      title: "Embedding 向量模型",
+      body: "Embedding 用于知识库 RAG、长期记忆召回与语义搜索。",
+      deps: ["Python 3.10+", "sentence-transformers", "本地模型目录可写"],
+      action: "下载后测试 Worker 通信，再导入知识库生成向量索引。",
+    },
+    emotion: {
+      title: "情绪识别模型",
+      body: "情绪模型用于语音情绪检测并与文本情绪融合。",
+      deps: ["Python 3.10+", "transformers", "torch / torchaudio"],
+      action: "下载后运行功能测试验证识别链路。",
+    },
+  };
+  return guide[activeType.value];
+});
 
 // ── 初始化 ──
 
@@ -313,6 +356,41 @@ function openDownloadDrawer() {
       />
     </el-tabs>
 
+    <section class="deployment-panel">
+      <div class="deployment-main">
+        <div class="deployment-icon">
+          <el-icon v-if="activeType === 'tts'"><Microphone /></el-icon>
+          <el-icon v-else-if="activeType === 'embedding'"><Cpu /></el-icon>
+          <el-icon v-else-if="activeType === 'llm'"><Connection /></el-icon>
+          <el-icon v-else><Download /></el-icon>
+        </div>
+        <div>
+          <h2>{{ deploymentGuide.title }}</h2>
+          <p>{{ deploymentGuide.body }}</p>
+          <div class="dependency-list">
+            <el-tag v-for="dep in deploymentGuide.deps" :key="dep" size="small" effect="plain">
+              {{ dep }}
+            </el-tag>
+          </div>
+        </div>
+      </div>
+      <div class="deployment-status">
+        <div class="stat">
+          <strong>{{ typeStats.ready }}</strong>
+          <span>已部署</span>
+        </div>
+        <div class="stat">
+          <strong>{{ typeStats.downloading }}</strong>
+          <span>下载中</span>
+        </div>
+        <div class="stat">
+          <strong>{{ typeStats.total }}</strong>
+          <span>总模型</span>
+        </div>
+        <p>{{ deploymentGuide.action }}</p>
+      </div>
+    </section>
+
     <!-- 模型卡片网格 -->
     <div class="model-grid">
       <ModelDownloadCard
@@ -502,10 +580,101 @@ function openDownloadDrawer() {
   }
 }
 
+.deployment-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.deployment-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.deployment-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 20px;
+}
+
+.deployment-main h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.deployment-main p,
+.deployment-status p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dependency-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.deployment-status {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  align-content: start;
+}
+
+.deployment-status p {
+  grid-column: 1 / -1;
+  padding-top: 4px;
+}
+
+.stat {
+  min-width: 0;
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-light);
+  text-align: center;
+}
+
+.stat strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.stat span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
 .model-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .deployment-panel {
+    grid-template-columns: 1fr;
+  }
 }
 
 .download-task {
